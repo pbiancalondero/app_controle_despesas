@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "984319075366",
+    "project_id": "controledespesas-85d96",
+    "storage_bucket": "controledespesas-85d96.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:984319075366:android:900ee42aef96d8d312f2e7",
+        "android_client_info": {
+          "package_name": "com.example.controle_despesas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0SJYmuPGHGWdoG5AwlmXF7YIU5g9CTjI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
