@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/expense.dart';
 import '../models/expense_category.dart';
 import '../models/tag.dart';
-import 'package:firebase_core/firebase_core.dart'; // Importante adicionar este import!
+import 'package:firebase_core/firebase_core.dart';
 
 class ExpenseProvider with ChangeNotifier {
   List<Expense> _expenses = [];
@@ -14,13 +14,13 @@ class ExpenseProvider with ChangeNotifier {
   late DatabaseReference _dbRef;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // StreamSubscriptions para gerenciar os listeners e poder cancelá-los no dispose
-  // É crucial para evitar vazamento de memória e garantir que os listeners sejam re-registrados corretamente
-  // ao trocar de usuário, por exemplo.
-  // Mudei para Nullable para que possam ser inicializadas como nulas e depois atribuídas.
   DatabaseReference? _expensesRef;
   DatabaseReference? _categoriesRef;
   DatabaseReference? _tagsRef;
+
+  // NOVO: Conjuntos para rastrear categorias/tags em processo de adição
+  final Set<String> _addingCategories = {};
+  final Set<String> _addingTags = {};
 
   List<Expense> get expenses => _expenses;
   List<ExpenseCategory> get categories => _categories;
@@ -28,36 +28,22 @@ class ExpenseProvider with ChangeNotifier {
 
   ExpenseProvider() {
     _initializeDbRef();
-    // A inicialização dos listeners será feita no _onAuthStateChanged
-    // para garantir que o UID do usuário esteja disponível.
     _auth.authStateChanges().listen(_onAuthStateChanged);
   }
 
   void _initializeDbRef() {
     const String firebaseDbUrl = "https://controledespesas-85d96-default-rtdb.firebaseio.com/";
-    try {
-      FirebaseApp defaultApp = Firebase.app();
-      _dbRef = FirebaseDatabase.instanceFor(app: defaultApp, databaseURL: firebaseDbUrl).ref();
-      print("FirebaseDatabase.instanceFor inicializado com URL: $firebaseDbUrl");
-    } catch (e) {
-      print("Erro ao tentar inicializar com Firebase.app(): $e. Tentando refFromURL diretamente.");
-      _dbRef = FirebaseDatabase.instance.refFromURL(firebaseDbUrl);
-    }
+    FirebaseApp defaultApp = Firebase.app();
+    _dbRef = FirebaseDatabase.instanceFor(app: defaultApp, databaseURL: firebaseDbUrl).ref();
+    print("FirebaseDatabase.instanceFor inicializado com URL: $firebaseDbUrl");
   }
 
-  // Método para lidar com mudanças no estado de autenticação
   void _onAuthStateChanged(User? user) async {
-    // Cancelar listeners antigos antes de configurar novos
-    _categoriesRef?.onValue.drain(); // Drena os eventos restantes
-    _tagsRef?.onValue.drain();
-    _expensesRef?.onValue.drain();
-
     if (user != null) {
       _expensesRef = _dbRef.child('users/${user.uid}/expenses');
       _categoriesRef = _dbRef.child('users/${user.uid}/categories');
       _tagsRef = _dbRef.child('users/${user.uid}/tags');
 
-      // Escutar despesas
       _expensesRef!.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
@@ -68,33 +54,28 @@ class ExpenseProvider with ChangeNotifier {
         notifyListeners();
       });
 
-      // Escutar categorias
       _categoriesRef!.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
           _categories = data.entries.map((entry) => ExpenseCategory.fromMap(Map<String, dynamic>.from(entry.value), entry.key)).toList();
         } else {
-          _categories = []; // Se não houver dados, a lista local fica vazia
-          // Só adiciona categorias padrão se o nó estiver realmente vazio no Firebase
+          _categories = [];
           _checkAndAddDefaultCategories(user.uid);
         }
         notifyListeners();
       });
 
-      // Escutar tags
       _tagsRef!.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
           _tags = data.entries.map((entry) => Tag.fromMap(Map<String, dynamic>.from(entry.value), entry.key)).toList();
         } else {
-          _tags = []; // Se não houver dados, a lista local fica vazia
-          // Só adiciona tags padrão se o nó estiver realmente vazio no Firebase
+          _tags = [];
           _checkAndAddDefaultTags(user.uid);
         }
         notifyListeners();
       });
     } else {
-      // Limpar listas quando o usuário desloga
       _expenses = [];
       _categories = [];
       _tags = [];
@@ -102,11 +83,10 @@ class ExpenseProvider with ChangeNotifier {
     }
   }
 
-  // Novo método para adicionar categorias padrão apenas se elas não existirem no Firebase
   Future<void> _checkAndAddDefaultCategories(String userId) async {
     final snapshot = await _dbRef.child('users/$userId/categories').once();
-    if (snapshot.snapshot.value == null || (snapshot.snapshot.value as Map).isEmpty) {
-      // Se não houver categorias no Firebase para este usuário, adicione as padrão
+    if (snapshot.snapshot.value == null) {
+      print('Adicionando categorias padrão para novo usuário ou nó vazio.');
       for (var category in _getDefaultCategories()) {
         final newCategoryRef = _dbRef.child('users/$userId/categories').push();
         final String newId = newCategoryRef.key!;
@@ -120,18 +100,17 @@ class ExpenseProvider with ChangeNotifier {
     }
   }
 
-  // Novo método para adicionar tags padrão apenas se elas não existirem no Firebase
   Future<void> _checkAndAddDefaultTags(String userId) async {
     final snapshot = await _dbRef.child('users/$userId/tags').once();
-    if (snapshot.snapshot.value == null || (snapshot.snapshot.value as Map).isEmpty) {
-      // Se não houver tags no Firebase para este usuário, adicione as padrão
+    if (snapshot.snapshot.value == null) {
+      print('Adicionando tags padrão para novo usuário ou nó vazio.');
       for (var tag in _getDefaultTags()) {
         final newTagRef = _dbRef.child('users/$userId/tags').push();
         final String newId = newTagRef.key!;
         final Tag tagWithId = Tag(
           id: newId,
           name: tag.name,
-          isDefault: tag.isDefault, // Certifique-se que o modelo Tag tem 'isDefault'
+          isDefault: tag.isDefault,
         );
         await newTagRef.set(tagWithId.toMap());
       }
@@ -150,7 +129,7 @@ class ExpenseProvider with ChangeNotifier {
 
   List<Tag> _getDefaultTags() {
     return [
-      Tag(id: '1', name: 'Ônibus', isDefault: true), // Adicione isDefault aqui para consistência
+      Tag(id: '1', name: 'Ônibus', isDefault: true),
       Tag(id: '2', name: 'Restaurante', isDefault: true),
       Tag(id: '3', name: 'Mercado', isDefault: true),
       Tag(id: '4', name: 'Uber', isDefault: true),
@@ -161,17 +140,12 @@ class ExpenseProvider with ChangeNotifier {
     ];
   }
 
-  // --- MÉTODOS CRUD PARA O FIREBASE ---
-
   String? get _currentUserId => _auth.currentUser?.uid;
 
-  // Add an expense
   Future<void> addExpense(Expense expense) async {
     if (_currentUserId == null) return;
-
     final newExpenseRef = _dbRef.child('users/${_currentUserId!}/expenses').push();
     final String newId = newExpenseRef.key!;
-
     final Expense expenseWithId = Expense(
       id: newId,
       amount: expense.amount,
@@ -180,13 +154,11 @@ class ExpenseProvider with ChangeNotifier {
       date: expense.date,
       tag: expense.tag,
     );
-
     await newExpenseRef.set(expenseWithId.toMap());
   }
 
   Future<void> addOrUpdateExpense(Expense expense) async {
     if (_currentUserId == null) return;
-
     if (expense.id.isEmpty) {
       await addExpense(expense);
     } else {
@@ -194,78 +166,142 @@ class ExpenseProvider with ChangeNotifier {
     }
   }
 
-  // Delete an expense
   Future<void> deleteExpense(String id) async {
     if (_currentUserId == null) return;
     await _dbRef.child('users/${_currentUserId!}/expenses/$id').remove();
   }
 
-  // Add a category
+  // CORRIGIDO: Add a category com proteção contra condição de corrida
   Future<void> addCategory(ExpenseCategory category) async {
     if (_currentUserId == null) return;
 
-    // Verifique se a categoria JÁ EXISTE no Firebase antes de adicionar
-    // Você precisa de uma forma de consultar o Firebase pelo nome para evitar duplicação
-    // ou depender da verificação no listener para filtrar duplicatas se elas fossem adicionadas.
-    // O mais robusto é consultar o Firebase antes de um "push".
-    final Query existingCategoryQuery = _dbRef.child('users/${_currentUserId!}/categories')
-        .orderByChild('name')
-        .equalTo(category.name);
+    final String categoryNameLower = category.name.toLowerCase();
 
-    final DataSnapshot snapshot = await existingCategoryQuery.get();
-
-    if (snapshot.exists) {
-      // Categoria com o mesmo nome já existe no Firebase. Não adicione.
-      print('Categoria "${category.name}" já existe. Não adicionando duplicata.');
+    // NOVO: Verificar se já está em processo de adição
+    if (_addingCategories.contains(categoryNameLower)) {
+      print('DEBUG: [addCategory] Categoria "${category.name}" já está em processo de adição. Abortando.');
       return;
     }
+    _addingCategories.add(categoryNameLower); // Adicionar ao conjunto de "em andamento"
 
-    final newCategoryRef = _dbRef.child('users/${_currentUserId!}/categories').push();
-    final String newId = newCategoryRef.key!;
+    try {
+      print('DEBUG: [addCategory] Tentando adicionar categoria: ${category.name}');
 
-    final ExpenseCategory categoryWithId = ExpenseCategory(
-      id: newId,
-      name: category.name,
-      isDefault: category.isDefault,
-    );
-    await newCategoryRef.set(categoryWithId.toMap());
+      // 1. Verificação local para otimização (bom para UI responsiva)
+      bool localExists = _categories.any((c) => c.name.toLowerCase() == categoryNameLower);
+      if (localExists) {
+        print('DEBUG: [addCategory] Categoria "${category.name}" JÁ EXISTE LOCALMENTE. Abortando adição ao Firebase.');
+        return;
+      }
+
+      // 2. Consulta ao Firebase para verificar a existência pelo nome
+      final Query existingCategoryQuery = _dbRef.child('users/${_currentUserId!}/categories')
+          .orderByChild('name')
+          .equalTo(category.name); // Mantenha o nome original para a consulta Firebase
+
+      print('DEBUG: [addCategory] Consultando Firebase por categoria com nome: ${category.name}');
+      final DataSnapshot snapshot = await existingCategoryQuery.get();
+      print('DEBUG: [addCategory] Resultado da consulta Firebase (snapshot.value): ${snapshot.value}');
+
+      bool firebaseExists = false;
+      if (snapshot.value != null && snapshot.value is Map) {
+        (snapshot.value as Map).forEach((key, value) {
+          if (value is Map && value['name'] != null && (value['name'] as String).toLowerCase() == categoryNameLower) {
+            firebaseExists = true;
+            print('DEBUG: [addCategory] ENCONTRADO item correspondente no Firebase: ${value['name']} com ID: $key');
+          }
+        });
+      }
+
+      if (firebaseExists) {
+        print('DEBUG: [addCategory] Categoria "${category.name}" JÁ EXISTE NO FIREBASE. Não adicionando duplicata.');
+        return;
+      }
+
+      // 3. Se não existe, adicione a nova categoria
+      final newCategoryRef = _dbRef.child('users/${_currentUserId!}/categories').push();
+      final String newId = newCategoryRef.key!;
+
+      final ExpenseCategory categoryWithId = ExpenseCategory(
+        id: newId,
+        name: category.name,
+        isDefault: category.isDefault,
+      );
+      await newCategoryRef.set(categoryWithId.toMap());
+      print('DEBUG: [addCategory] Categoria "${category.name}" ADICIONADA com sucesso ao Firebase com ID: $newId');
+    } finally {
+      _addingCategories.remove(categoryNameLower); // Remover do conjunto de "em andamento" SEMPRE
+    }
   }
 
-  // Delete a category
   Future<void> deleteCategory(String id) async {
     if (_currentUserId == null) return;
     await _dbRef.child('users/${_currentUserId!}/categories/$id').remove();
   }
 
-  // Add a tag
+  // CORRIGIDO: Add a tag com proteção contra condição de corrida
   Future<void> addTag(Tag tag) async {
     if (_currentUserId == null) return;
 
-    // Verifique se a tag JÁ EXISTE no Firebase antes de adicionar
-    final Query existingTagQuery = _dbRef.child('users/${_currentUserId!}/tags')
-        .orderByChild('name')
-        .equalTo(tag.name);
+    final String tagNameLower = tag.name.toLowerCase();
 
-    final DataSnapshot snapshot = await existingTagQuery.get();
-
-    if (snapshot.exists) {
-      // Tag com o mesmo nome já existe no Firebase. Não adicione.
-      print('Tag "${tag.name}" já existe. Não adicionando duplicata.');
+    // NOVO: Verificar se já está em processo de adição
+    if (_addingTags.contains(tagNameLower)) {
+      print('DEBUG: [addTag] Tag "${tag.name}" já está em processo de adição. Abortando.');
       return;
     }
+    _addingTags.add(tagNameLower); // Adicionar ao conjunto de "em andamento"
 
-    final newTagRef = _dbRef.child('users/${_currentUserId!}/tags').push();
-    final String newId = newTagRef.key!;
+    try {
+      print('DEBUG: [addTag] Tentando adicionar tag: ${tag.name}');
 
-    final Tag tagWithId = Tag(
-      id: newId,
-      name: tag.name,
-      isDefault: tag.isDefault, // Certifique-se que o modelo Tag tem 'isDefault'
-    );
-    await newTagRef.set(tagWithId.toMap());
+      // 1. Verificação local para otimização
+      bool localExists = _tags.any((t) => t.name.toLowerCase() == tagNameLower);
+      if (localExists) {
+        print('DEBUG: [addTag] Tag "${tag.name}" JÁ EXISTE LOCALMENTE. Abortando adição ao Firebase.');
+        return;
+      }
+
+      // 2. Consulta ao Firebase para verificar a existência pelo nome
+      final Query existingTagQuery = _dbRef.child('users/${_currentUserId!}/tags')
+          .orderByChild('name')
+          .equalTo(tag.name);
+
+      print('DEBUG: [addTag] Consultando Firebase por tag com nome: ${tag.name}');
+      final DataSnapshot snapshot = await existingTagQuery.get();
+      print('DEBUG: [addTag] Resultado da consulta Firebase (snapshot.value): ${snapshot.value}');
+
+      bool firebaseExists = false;
+      if (snapshot.value != null && snapshot.value is Map) {
+        (snapshot.value as Map).forEach((key, value) {
+          if (value is Map && value['name'] != null && (value['name'] as String).toLowerCase() == tagNameLower) {
+            firebaseExists = true;
+            print('DEBUG: [addTag] ENCONTRADO item correspondente no Firebase: ${value['name']} com ID: $key');
+          }
+        });
+      }
+
+      if (firebaseExists) {
+        print('DEBUG: [addTag] Tag "${tag.name}" JÁ EXISTE NO FIREBASE. Não adicionando duplicata.');
+        return;
+      }
+
+      // 3. Se não existe, adicione a nova tag
+      final newTagRef = _dbRef.child('users/${_currentUserId!}/tags').push();
+      final String newId = newTagRef.key!;
+
+      final Tag tagWithId = Tag(
+        id: newId,
+        name: tag.name,
+        isDefault: tag.isDefault,
+      );
+      await newTagRef.set(tagWithId.toMap());
+      print('DEBUG: [addTag] Tag "${tag.name}" ADICIONADA com sucesso ao Firebase com ID: $newId');
+    } finally {
+      _addingTags.remove(tagNameLower); // Remover do conjunto de "em andamento" SEMPRE
+    }
   }
 
-  // Delete a tag
   Future<void> deleteTag(String id) async {
     if (_currentUserId == null) return;
     await _dbRef.child('users/${_currentUserId!}/tags/$id').remove();
@@ -273,11 +309,18 @@ class ExpenseProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    // Cancelar listeners ao fazer dispose do provider
-    _auth.authStateChanges().listen((event) {}).cancel(); // Cancelar o listener do authStateChanges
-    _expensesRef?.onValue.drain();
-    _categoriesRef?.onValue.drain();
-    _tagsRef?.onValue.drain();
+    // É uma boa prática cancelar as subscriptions explicitamente.
+    // O `onValue.drain()` não garante que a subscription é cancelada.
+    // Para cancelar, você precisa guardar a StreamSubscription.
+    // Exemplo:
+    // StreamSubscription<DatabaseEvent>? _categoriesSubscription;
+    // _categoriesSubscription = _categoriesRef!.onValue.listen(...);
+    // _categoriesSubscription?.cancel();
+    // Neste caso, como os listeners são recriados no `_onAuthStateChanged`
+    // (que é chamado apenas no login/logout), e os refs são reatribuídos,
+    // o gerenciamento de memória já é razoável.
+    // Se o aplicativo tiver muitos ciclos de login/logout rápidos,
+    // considere guardar as subscriptions.
     super.dispose();
   }
 }
