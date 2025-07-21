@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/add_category_dialog.dart';
 
-// Example for CategoryManagementScreen
 class CategoryManagementScreen extends StatelessWidget {
   const CategoryManagementScreen({super.key});
 
@@ -13,7 +12,7 @@ class CategoryManagementScreen extends StatelessWidget {
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
         title: const Text("Gerenciar Categorias"),
-        backgroundColor: Colors.black, // Themed color similar to your inspirations
+        backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
       body: Consumer<ExpenseProvider>(
@@ -44,7 +43,7 @@ class CategoryManagementScreen extends StatelessWidget {
               onAdd: (newCategory) {
                 Provider.of<ExpenseProvider>(context, listen: false)
                     .addCategory(newCategory);
-                Navigator.pop(context); // Close the dialog
+                Navigator.pop(context);
               },
             ),
           );

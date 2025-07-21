@@ -43,7 +43,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
             widget.onAdd(newCategory);
             Provider.of<ExpenseProvider>(context, listen: false)
                 .addCategory(newCategory);
-            _controller.clear(); // Clear the input field
+            _controller.clear(); 
             Navigator.of(context).pop();
           },
         ),

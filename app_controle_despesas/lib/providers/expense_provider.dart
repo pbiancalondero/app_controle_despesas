@@ -171,13 +171,11 @@ class ExpenseProvider with ChangeNotifier {
     await _dbRef.child('users/${_currentUserId!}/expenses/$id').remove();
   }
 
-  // CORRIGIDO: Add a category com proteção contra condição de corrida
   Future<void> addCategory(ExpenseCategory category) async {
     if (_currentUserId == null) return;
 
     final String categoryNameLower = category.name.toLowerCase();
 
-    // NOVO: Verificar se já está em processo de adição
     if (_addingCategories.contains(categoryNameLower)) {
       print('DEBUG: [addCategory] Categoria "${category.name}" já está em processo de adição. Abortando.');
       return;
@@ -239,13 +237,11 @@ class ExpenseProvider with ChangeNotifier {
     await _dbRef.child('users/${_currentUserId!}/categories/$id').remove();
   }
 
-  // CORRIGIDO: Add a tag com proteção contra condição de corrida
   Future<void> addTag(Tag tag) async {
     if (_currentUserId == null) return;
 
     final String tagNameLower = tag.name.toLowerCase();
 
-    // NOVO: Verificar se já está em processo de adição
     if (_addingTags.contains(tagNameLower)) {
       print('DEBUG: [addTag] Tag "${tag.name}" já está em processo de adição. Abortando.');
       return;

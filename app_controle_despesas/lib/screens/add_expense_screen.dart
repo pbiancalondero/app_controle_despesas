@@ -5,8 +5,6 @@ import '../models/expense.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/add_category_dialog.dart';
 import '../widgets/add_tag_dialog.dart';
-// Import para ExpenseCategory
-// Import para Tag
 
 class AddExpenseScreen extends StatefulWidget {
   final Expense? initialExpense;
@@ -119,10 +117,10 @@ if ((_selectedTagId == null || !expenseProvider.tags.any((tag) => tag.id == _sel
     final expense = Expense(
   id: widget.initialExpense?.id ?? '', // ID vazio para novas despesas, Firebase irá gerar
   amount: double.parse(_amountController.text),
-  categoryId: _selectedCategoryId!, // <<< Aqui o problema acontece se _selectedCategoryId for nulo
+  categoryId: _selectedCategoryId!, 
   note: _noteController.text,
   date: _selectedDate,
-  tag: _selectedTagId!, // <<< Aqui o problema acontece se _selectedTagId for nulo
+  tag: _selectedTagId!, 
 );
 
     Provider.of<ExpenseProvider>(context, listen: false)

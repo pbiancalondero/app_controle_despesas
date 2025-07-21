@@ -6,7 +6,7 @@ import '../screens/add_expense_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
 import '../models/expense.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // <<< Adicione este import
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    // ... (o restante do seu código build permanece o mesmo)
     return Scaffold(
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
@@ -84,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen>
               title: const Text('Gerenciar Categorias',
               style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // This closes the drawer
+                Navigator.pop(context); 
                 Navigator.pushNamed(context, '/manage_categories');
               },
             ),
@@ -93,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen>
               title: const Text('Gerenciar Tags',
               style: TextStyle(color: Colors.white)),
               onTap: () {
-                Navigator.pop(context); // This closes the drawer
+                Navigator.pop(context);
                 Navigator.pushNamed(context, '/manage_tags');
               },
             ),
@@ -178,12 +177,11 @@ class _HomeScreenState extends State<HomeScreen>
           );
         }
 
-        // Grouping expenses by category
         var grouped = groupBy(provider.expenses, (Expense e) => e.categoryId);
         return ListView(
           children: grouped.entries.map((entry) {
             String categoryName = getCategoryNameById(
-                context, entry.key); // Ensure you implement this function
+                context, entry.key); 
             double total = entry.value.fold(
                 0.0, (double prev, Expense element) => prev + element.amount);
             return Column(
@@ -202,9 +200,9 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 ListView.builder(
                   physics:
-                      const NeverScrollableScrollPhysics(), // to disable scrolling within the inner list view
+                      const NeverScrollableScrollPhysics(),
                   shrinkWrap:
-                      true, // necessary to integrate a ListView within another ListView
+                      true, 
                   itemCount: entry.value.length,
                   itemBuilder: (context, index) {
                     Expense expense = entry.value[index];
@@ -232,7 +230,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // home_screen.dart
   String getCategoryNameById(BuildContext context, String categoryId) {
     var category = Provider.of<ExpenseProvider>(context, listen: false)
         .categories

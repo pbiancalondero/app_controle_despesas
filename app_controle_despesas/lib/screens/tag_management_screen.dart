@@ -12,7 +12,7 @@ class TagManagementScreen extends StatelessWidget {
       backgroundColor: Colors.grey[800],
       appBar: AppBar(
         title: const Text("Gerenciar Tags"),
-        backgroundColor: Colors.black, // Themed color similar to your inspirations
+        backgroundColor: Colors.black, 
         foregroundColor: Colors.white,
       ),
       body: Consumer<ExpenseProvider>(
@@ -43,7 +43,7 @@ class TagManagementScreen extends StatelessWidget {
             builder: (context) => AddTagDialog(
               onAdd: (newTag) {
                 Provider.of<ExpenseProvider>(context, listen: false).addTag(newTag);
-                Navigator.pop(context); // Close the dialog after adding the new tag
+                Navigator.pop(context);
               },
             ),
           );
