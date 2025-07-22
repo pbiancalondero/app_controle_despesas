@@ -18,7 +18,6 @@ class ExpenseProvider with ChangeNotifier {
   DatabaseReference? _categoriesRef;
   DatabaseReference? _tagsRef;
 
-  // NOVO: Conjuntos para rastrear categorias/tags em processo de adição
   final Set<String> _addingCategories = {};
   final Set<String> _addingTags = {};
 
@@ -129,14 +128,11 @@ class ExpenseProvider with ChangeNotifier {
 
   List<Tag> _getDefaultTags() {
     return [
-      Tag(id: '1', name: 'Ônibus', isDefault: true),
+      Tag(id: '1', name: 'Posto de Combustível', isDefault: true),
       Tag(id: '2', name: 'Restaurante', isDefault: true),
       Tag(id: '3', name: 'Mercado', isDefault: true),
-      Tag(id: '4', name: 'Uber', isDefault: true),
-      Tag(id: '5', name: 'Férias', isDefault: true),
-      Tag(id: '6', name: 'Aniversário', isDefault: true),
-      Tag(id: '7', name: 'Dieta', isDefault: true),
-      Tag(id: '8', name: 'Autocuidado', isDefault: true),
+      Tag(id: '4', name: 'Farmácia', isDefault: true),
+      Tag(id: '5', name: 'Loja', isDefault: true),
     ];
   }
 

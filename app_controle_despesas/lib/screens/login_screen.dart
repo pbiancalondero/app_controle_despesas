@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } else if (e.code == 'invalid-email') {
         message = 'O formato do e-mail é inválido.';
       } else {
-        message = 'Ocorreu um erro de autenticação. Por favor, tente novamente. (${e.message})';
+        message = 'Ocorreu um erro de autenticação. Por favor, tente novamente.';
       }
       setState(() {
         _errorMessage = message;

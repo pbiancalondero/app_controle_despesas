@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Controle de Despesas',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData.dark().copyWith( // Ajuste o tema para um visual escuro consistente
+        theme: ThemeData.dark().copyWith(
           primaryColor: Colors.black,
           scaffoldBackgroundColor: Colors.grey[800],
           appBarTheme: const AppBarTheme(
@@ -87,9 +87,6 @@ class MyApp extends StatelessWidget {
         routes: {
           '/manage_categories': (context) => const CategoryManagementScreen(),
           '/manage_tags': (context) => const TagManagementScreen(),
-          // Se você quiser que a LoginScreen seja acessível via rota, pode adicioná-la aqui também,
-          // mas 'home' já lida com o fluxo inicial.
-          // '/login': (context) => const LoginScreen(),
         },
       ),
     );

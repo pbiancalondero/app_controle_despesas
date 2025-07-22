@@ -128,7 +128,6 @@ if ((_selectedTagId == null || !expenseProvider.tags.any((tag) => tag.id == _sel
     Navigator.pop(context);
   }
 
-  // Helper method to build a text field
   Widget buildTextField(
       TextEditingController controller, String label, TextInputType type) {
     return Padding(
@@ -146,7 +145,6 @@ if ((_selectedTagId == null || !expenseProvider.tags.any((tag) => tag.id == _sel
     );
   }
 
-  // Helper method to build the date picker field
   Widget buildDateField(DateTime selectedDate) {
     return ListTile(
       title: Text("Data: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
@@ -168,7 +166,6 @@ if ((_selectedTagId == null || !expenseProvider.tags.any((tag) => tag.id == _sel
     );
   }
 
-  // Helper method to build the category dropdown
   Widget buildCategoryDropdown(ExpenseProvider provider) {
     // Usar 'Consumer' aqui para garantir que o Dropdown seja reconstruído
     // quando as categorias do provider mudarem (ex: após adicionar uma nova)
@@ -177,7 +174,7 @@ if ((_selectedTagId == null || !expenseProvider.tags.any((tag) => tag.id == _sel
         // Se não houver categorias, talvez exiba uma mensagem ou desabilite
         if (expenseProvider.categories.isEmpty) {
           return DropdownButtonFormField<String>(
-            value: null, // Sem valor selecionado
+            value: null,
             items: const [
               DropdownMenuItem(
                 value: "Novo",
@@ -255,14 +252,13 @@ if ((_selectedTagId == null || !expenseProvider.tags.any((tag) => tag.id == _sel
     );
   }
 
-  // Helper method to build the tag dropdown
   Widget buildTagDropdown(ExpenseProvider provider) {
     // Usar 'Consumer' aqui também para reconstruir quando as tags mudarem
     return Consumer<ExpenseProvider>(
       builder: (context, expenseProvider, child) {
         if (expenseProvider.tags.isEmpty) {
            return DropdownButtonFormField<String>(
-            value: null, // Sem valor selecionado
+            value: null,
             items: const [
               DropdownMenuItem(
                 value: "Novo",

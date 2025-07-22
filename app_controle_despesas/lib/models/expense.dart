@@ -23,7 +23,7 @@ class Expense {
       amount: (map['amount'] as num).toDouble(), // Firebase armazena números como num, converter para double
       categoryId: map['categoryId'],
       note: map['note'],
-      date: DateTime.parse(map['date']), // Parse da string ISO 8601
+      date: DateTime.parse(map['date']),
       tag: map['tag'],
     );
   }
