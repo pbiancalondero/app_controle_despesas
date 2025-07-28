@@ -71,11 +71,6 @@ class MockExpenseProvider extends Mock implements ExpenseProvider {
         returnValue: Future.value(null),
       );
 
-  @override
-  Future<void> addOrUpdateExpense(Expense expense) => super.noSuchMethod(
-        Invocation.method(#addOrUpdateExpense, [expense]),
-        returnValue: Future.value(null),
-      );
 
   // Mockar notifyListeners para não fazer nada real, apenas para que o Mockito saiba que o método existe.
   @override
