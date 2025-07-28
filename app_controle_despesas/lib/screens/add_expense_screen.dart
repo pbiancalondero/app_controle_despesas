@@ -124,7 +124,7 @@ if ((_selectedTagId == null || !expenseProvider.tags.any((tag) => tag.id == _sel
 );
 
     Provider.of<ExpenseProvider>(context, listen: false)
-        .addOrUpdateExpense(expense);
+        .addExpense(expense);
     Navigator.pop(context);
   }
 

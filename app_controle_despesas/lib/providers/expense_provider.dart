@@ -153,15 +153,6 @@ class ExpenseProvider with ChangeNotifier {
     await newExpenseRef.set(expenseWithId.toMap());
   }
 
-  Future<void> addOrUpdateExpense(Expense expense) async {
-    if (_currentUserId == null) return;
-    if (expense.id.isEmpty) {
-      await addExpense(expense);
-    } else {
-      await _dbRef.child('users/${_currentUserId!}/expenses/${expense.id}').update(expense.toMap());
-    }
-  }
-
   Future<void> deleteExpense(String id) async {
     if (_currentUserId == null) return;
     await _dbRef.child('users/${_currentUserId!}/expenses/$id').remove();
