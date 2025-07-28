@@ -6,7 +6,7 @@ import '../screens/add_expense_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:collection/collection.dart';
 import '../models/expense.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,24 +23,24 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _signInAnonymously(); // <<< CHAME O MÉTODO DE LOGIN AQUI!
+    //_signInAnonymously(); // <<< CHAME O MÉTODO DE LOGIN AQUI!
   }
 
   // >>> ADICIONE O MÉTODO DE LOGIN ANÔNIMO AQUI DENTRO DA CLASSE _HomeScreenState
-  Future<void> _signInAnonymously() async {
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
-      print("Usuário anônimo logado com sucesso! UID: ${userCredential.user?.uid}");
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'operation-not-allowed') {
-        print("Erro: Autenticação anônima não habilitada. Habilite-a no console do Firebase.");
-      } else {
-        print("Erro ao logar anonimamente: ${e.code} - ${e.message}");
-      }
-    } catch (e) {
-      print("Ocorreu um erro inesperado ao tentar login anônimo: $e");
-    }
-  }
+  // Future<void> _signInAnonymously() async {
+  //   try {
+  //     UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
+  //     print("Usuário anônimo logado com sucesso! UID: ${userCredential.user?.uid}");
+  //   } on FirebaseAuthException catch (e) {
+  //     if (e.code == 'operation-not-allowed') {
+  //       print("Erro: Autenticação anônima não habilitada. Habilite-a no console do Firebase.");
+  //     } else {
+  //       print("Erro ao logar anonimamente: ${e.code} - ${e.message}");
+  //     }
+  //   } catch (e) {
+  //     print("Ocorreu um erro inesperado ao tentar login anônimo: $e");
+  //   }
+  // }
 
 
   @override
